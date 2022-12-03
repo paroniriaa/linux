@@ -1493,6 +1493,14 @@ bool kvm_cpuid(struct kvm_vcpu *vcpu, u32 *eax, u32 *ebx,
 }
 EXPORT_SYMBOL_GPL(kvm_cpuid);
 
+/*
+* Modified function int kvm_emulate_cpuid(struct kvm_vcpu *vcpu) to report back
+* additional information when special CPUID leaf nodes are requested:
+* %eax = 0x4FFFFFFC -> Return the total number of exits (all types) in %eax
+* %eax = 0x4FFFFFFD -> Return the high 32 bits of the total time spent processing all exits in %ebx
+*                    Return the low 32 bits of the total time spent processing all exits in %ecx 
+*/
+
 int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 {
 	u32 eax, ebx, ecx, edx;
@@ -1502,7 +1510,27 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 
 	eax = kvm_rax_read(vcpu);
 	ecx = kvm_rcx_read(vcpu);
-	kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, false);
+	
+	// check special new CPUID leaf
+	switch(eax) {
+		// case %eax = 0x4FFFFFFC
+		case 0x4FFFFFFC:
+			eax = &total_exits_counter;
+			break;
+
+		// case %eax = 0x4FFFFFFD
+		case 0x4FFFFFFD:
+			//the high 32 bits of the total time spent processing all exits store in %ebx
+			ebx = (&total_cup_cycles_counter >> 32);;	
+			//the low 32 bits of the total time spent processing all exits store in %ecx
+			ecx = (&total_cup_cycles_counter & 0xffffffff); 
+			break; 
+
+		// default case for all other %eax value
+		default:
+			kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, false);
+	}
+
 	kvm_rax_write(vcpu, eax);
 	kvm_rbx_write(vcpu, ebx);
 	kvm_rcx_write(vcpu, ecx);

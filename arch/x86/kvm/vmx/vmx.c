@@ -6279,9 +6279,29 @@ void dump_vmcs(struct kvm_vcpu *vcpu)
 /*
  * The guest has exited.  See if we can fix it or if we need userspace
  * assistance.
+ 
  */
+/*
+* Modified function static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath) 
+* to report back additional information when special CPUID leaf nodes are requested:
+* %eax = 0x4FFFFFFC -> Return the total number of exits (all types) in %eax
+* 					-> added total_exit_counter
+* %eax = 0x4FFFFFFD -> Return the high 32 bits of the total time spent processing all exits in %ebx
+*                    Return the low 32 bits of the total time spent processing all exits in %ecx 
+*/
+
+//gloabl u32 variable for recording total number of exits
+extern u32 total_exits_counter;
+//gloabl uint64_t variable for recording total number of cpu cycles on exits
+extern uint64_t total_cup_cycles_counter;
+
 static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 {
+	// local uint64_t variables for record the beginning and the ending of processor's time stamp counter 
+	uint64_t begin_time_stamp_counter, end_time_stamp_counter;
+	// local int variable to store the return status of exit handler
+	int exit_handler_status;
+
 	struct vcpu_vmx *vmx = to_vmx(vcpu);
 	union vmx_exit_reason exit_reason = vmx->exit_reason;
 	u32 vectoring_info = vmx->idt_vectoring_info;
@@ -6444,7 +6464,18 @@ static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 	if (!kvm_vmx_exit_handlers[exit_handler_index])
 		goto unexpected_vmexit;
 
-	return kvm_vmx_exit_handlers[exit_handler_index](vcpu);
+	// increase by 1 for every exit
+	total_exits_counter++;
+	// record the beginning of processor's time stamp counter 
+	begin_time_stamp_counter = rdtsc();
+	// call the corressponding exit handler to handle the exit
+	exit_handler_status = kvm_vmx_exit_handlers[exit_handler_index](vcpu);
+	// record the ending of processor's time stamp counter
+	end_time_stamp_counter = rdtsc();
+	// compute the current time stamp gap and add it to the total processor cycle time
+	total_cup_cycles_counter += (end_time_stamp_counter - begin_time_stamp_counter);
+
+	return exit_handler_status
 
 unexpected_vmexit:
 	vcpu_unimpl(vcpu, "vmx: unexpected exit reason 0x%x\n",
