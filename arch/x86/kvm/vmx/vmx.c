@@ -6476,7 +6476,7 @@ static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 	// compute the current time stamp gap and add it to the total processor cycle time
 	total_cup_cycles_counter += (end_time_stamp_counter - begin_time_stamp_counter);
 
-	return exit_handler_status
+	return exit_handler_status;
 
 unexpected_vmexit:
 	vcpu_unimpl(vcpu, "vmx: unexpected exit reason 0x%x\n",
