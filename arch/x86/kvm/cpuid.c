@@ -1511,7 +1511,7 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 	//extern u32 variable (from vmx.c) for recording total number of exits
 	//extern u32 total_exits_counter;
 	//extern uint64_t variable (from vmx.c) for recording total number of cpu cycles on exits
-	uint64_t total_cup_cycles;
+	int64_t total_cup_cycles;
 	u32 eax, ebx, ecx, edx;
 
 	if (cpuid_fault_enabled(vcpu) && !kvm_require_cpl(vcpu, 0))
@@ -1529,11 +1529,11 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 
 		// case %eax = 0x4FFFFFFD
 		case 0x4FFFFFFD:
-			total_cup_cycles = arch_atomic64_read(total_cup_cycles_counter);
+			total_cup_cycles = arch_atomic64_read(&total_cup_cycles_counter);
 			//the high 32 bits of the total time spent processing all exits store in %ebx
-			ebx = (total_cup_cycles_counter >> 32);;	
+			ebx = (total_cup_cycles >> 32);;	
 			//the low 32 bits of the total time spent processing all exits store in %ecx
-			ecx = (total_cup_cycles_counter & 0xffffffff); 
+			ecx = (total_cup_cycles & 0xffffffff); 
 			break; 
 
 		// default case for all other %eax value
