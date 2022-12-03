@@ -6288,12 +6288,13 @@ void dump_vmcs(struct kvm_vcpu *vcpu)
 * 					-> added total_exit_counter
 * %eax = 0x4FFFFFFD -> Return the high 32 bits of the total time spent processing all exits in %ebx
 *                    Return the low 32 bits of the total time spent processing all exits in %ecx 
+*					-> added total_cup_cycles_counter
 */
 
 //gloabl u32 variable for recording total number of exits
-extern u32 total_exits_counter;
+u32 total_exits_counter;
 //gloabl uint64_t variable for recording total number of cpu cycles on exits
-extern uint64_t total_cup_cycles_counter;
+uint64_t total_cup_cycles_counter;
 
 static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 {

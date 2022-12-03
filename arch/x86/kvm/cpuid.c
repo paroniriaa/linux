@@ -1503,6 +1503,10 @@ EXPORT_SYMBOL_GPL(kvm_cpuid);
 
 int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 {
+	//extern u32 variable (from vmx.c) for recording total number of exits
+	extern u32 total_exits_counter;
+	//extern uint64_t variable (from vmx.c) for recording total number of cpu cycles on exits
+	uint64_t total_cup_cycles_counter;
 	u32 eax, ebx, ecx, edx;
 
 	if (cpuid_fault_enabled(vcpu) && !kvm_require_cpl(vcpu, 0))
