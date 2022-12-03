@@ -6291,10 +6291,10 @@ void dump_vmcs(struct kvm_vcpu *vcpu)
 *					-> added total_cup_cycles_counter
 */
 
-//gloabl u32 variable for recording total number of exits
-u32 total_exits_counter;
-//gloabl uint64_t variable for recording total number of cpu cycles on exits
-uint64_t total_cup_cycles_counter;
+//extern gloabl atomic_t variable for recording total number of exits
+extern atomic_t total_exits_counter;
+//extern gloabl atomic64_t variable for recording total number of cpu cycles on exits
+extern atomic64_t total_cup_cycles_counter;
 
 static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 {
@@ -6466,7 +6466,8 @@ static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 		goto unexpected_vmexit;
 
 	// increase by 1 for every exit
-	total_exits_counter++;
+	//total_exits_counter++;
+	arch_atomic_inc(&total_exits_counter);
 	// record the beginning of processor's time stamp counter 
 	begin_time_stamp_counter = rdtsc();
 	// call the corressponding exit handler to handle the exit
@@ -6474,7 +6475,8 @@ static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 	// record the ending of processor's time stamp counter
 	end_time_stamp_counter = rdtsc();
 	// compute the current time stamp gap and add it to the total processor cycle time
-	total_cup_cycles_counter += (end_time_stamp_counter - begin_time_stamp_counter);
+	//total_cup_cycles_counter += (end_time_stamp_counter - begin_time_stamp_counter);
+	arch_atomic64_add((end_time_stamp_counter - begin_time_stamp_counter), &total_cup_cycles_counter)
 
 	return exit_handler_status;
 
