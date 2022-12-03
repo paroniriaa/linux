@@ -1519,15 +1519,15 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 	switch(eax) {
 		// case %eax = 0x4FFFFFFC
 		case 0x4FFFFFFC:
-			eax = &total_exits_counter;
+			eax = total_exits_counter;
 			break;
 
 		// case %eax = 0x4FFFFFFD
 		case 0x4FFFFFFD:
 			//the high 32 bits of the total time spent processing all exits store in %ebx
-			ebx = (&total_cup_cycles_counter >> 32);;	
+			ebx = (total_cup_cycles_counter >> 32);;	
 			//the low 32 bits of the total time spent processing all exits store in %ecx
-			ecx = (&total_cup_cycles_counter & 0xffffffff); 
+			ecx = (total_cup_cycles_counter & 0xffffffff); 
 			break; 
 
 		// default case for all other %eax value
