@@ -6298,11 +6298,6 @@ extern atomic64_t total_cup_cycles_counter;
 
 static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 {
-	// local uint64_t variables for record the beginning and the ending of processor's time stamp counter 
-	uint64_t begin_time_stamp_counter, end_time_stamp_counter;
-	// local int variable to store the return status of exit handler
-	int exit_handler_status;
-
 	struct vcpu_vmx *vmx = to_vmx(vcpu);
 	union vmx_exit_reason exit_reason = vmx->exit_reason;
 	u32 vectoring_info = vmx->idt_vectoring_info;
@@ -6465,19 +6460,7 @@ static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 	if (!kvm_vmx_exit_handlers[exit_handler_index])
 		goto unexpected_vmexit;
 
-	// increase by 1 for every exit
-	//total_exits_counter++;
-	arch_atomic_inc(&total_exits_counter);
-	// record the beginning of processor's time stamp counter 
-	begin_time_stamp_counter = rdtsc();
-	// call the corressponding exit handler to handle the exit
-	exit_handler_status = kvm_vmx_exit_handlers[exit_handler_index](vcpu);
-	// record the ending of processor's time stamp counter
-	end_time_stamp_counter = rdtsc();
-	// compute the current time stamp gap and add it to the total processor cycle time
-	//total_cup_cycles_counter += (end_time_stamp_counter - begin_time_stamp_counter);
-	arch_atomic64_add((end_time_stamp_counter - begin_time_stamp_counter), &total_cup_cycles_counter);
-	return exit_handler_status;
+	return kvm_vmx_exit_handlers[exit_handler_index](vcpu);;
 
 unexpected_vmexit:
 	vcpu_unimpl(vcpu, "vmx: unexpected exit reason 0x%x\n",
@@ -6494,7 +6477,24 @@ unexpected_vmexit:
 
 static int vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 {
+
+	// local uint64_t variables for record the beginning and the ending of processor's time stamp counter 
+	uint64_t begin_time_stamp_counter, end_time_stamp_counter;
+	// local int variable to store the return status of exit handler
+	int exit_handler_status;
+
+	// increase by 1 for every exit
+	arch_atomic_inc(&total_exits_counter);
+	// record the beginning of processor's time stamp counter 
+	begin_time_stamp_counter = rdtsc();
+	// call the corressponding exit handler to handle the exit
+	
 	int ret = __vmx_handle_exit(vcpu, exit_fastpath);
+
+	// record the ending of processor's time stamp counter
+	end_time_stamp_counter = rdtsc();
+	// compute the current time stamp gap and add it to the total processor cycle time
+	arch_atomic64_add((end_time_stamp_counter - begin_time_stamp_counter), &total_cup_cycles_counter);
 
 	/*
 	 * Exit to user space when bus lock detected to inform that there is

@@ -1501,17 +1501,18 @@ EXPORT_SYMBOL_GPL(kvm_cpuid);
 *                    Return the low 32 bits of the total time spent processing all exits in %ecx 
 */
 
+//volatile int counter for total_exits_counter, atomically initialize to 0
 atomic_t total_exits_counter = ATOMIC_INIT(0);
+//export the variable total_exits_counter so vmx.c can use it
 EXPORT_SYMBOL(total_exits_counter);
+
+//volatile int64 counter for total_cup_cycles_counter, atomically initialize to 0
 atomic64_t total_cup_cycles_counter = ATOMIC64_INIT(0);
+//export the variable total_cup_cycles_counter so vmx.c can use it
 EXPORT_SYMBOL(total_cup_cycles_counter);
 
 int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 {
-	//extern u32 variable (from vmx.c) for recording total number of exits
-	//extern u32 total_exits_counter;
-	//extern uint64_t variable (from vmx.c) for recording total number of cpu cycles on exits
-	int64_t total_cup_cycles;
 	u32 eax, ebx, ecx, edx;
 
 	if (cpuid_fault_enabled(vcpu) && !kvm_require_cpl(vcpu, 0))
@@ -1520,20 +1521,23 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 	eax = kvm_rax_read(vcpu);
 	ecx = kvm_rcx_read(vcpu);
 	
-	// check special new CPUID leaf
+	// check special new CPUID leaf that defined in A2
 	switch(eax) {
 		// case %eax = 0x4FFFFFFC
 		case 0x4FFFFFFC:
 			eax = arch_atomic_read(&total_exits_counter);
+			printk(KERN_INFO "### Total Exits in EAX = %u", eax);
 			break;
 
 		// case %eax = 0x4FFFFFFD
 		case 0x4FFFFFFD:
-			total_cup_cycles = arch_atomic64_read(&total_cup_cycles_counter);
 			//the high 32 bits of the total time spent processing all exits store in %ebx
-			ebx = (total_cup_cycles >> 32);;	
+			ebx = (atomic64_read(&total_cup_cycles_counter) >> 32);;	
 			//the low 32 bits of the total time spent processing all exits store in %ecx
-			ecx = (total_cup_cycles & 0xffffffff); 
+			ecx = (atomic64_read(&total_cup_cycles_counter) & 0xFFFFFFFF);
+			
+			printk(KERN_INFO "### Total CPU Exit Cycle Time(hi) in EBX = %u", ebx);
+			printk(KERN_INFO "### Total CPU Exit Cycle Time(lo) in ECX = %u", ecx);
 			break; 
 
 		// default case for all other %eax value
