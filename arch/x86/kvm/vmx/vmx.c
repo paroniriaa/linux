@@ -6481,7 +6481,7 @@ static int vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 	// local uint64_t variables for record the beginning and the ending of processor's time stamp counter 
 	uint64_t begin_time_stamp_counter, end_time_stamp_counter;
 	// local int variable to store the return status of exit handler
-	int exit_handler_status;
+	int ret;
 
 	// increase by 1 for every exit
 	arch_atomic_inc(&total_exits_counter);
@@ -6489,7 +6489,7 @@ static int vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 	begin_time_stamp_counter = rdtsc();
 	// call the corressponding exit handler to handle the exit
 	
-	int ret = __vmx_handle_exit(vcpu, exit_fastpath);
+	ret = __vmx_handle_exit(vcpu, exit_fastpath);
 
 	// record the ending of processor's time stamp counter
 	end_time_stamp_counter = rdtsc();
