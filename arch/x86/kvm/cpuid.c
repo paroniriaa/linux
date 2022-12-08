@@ -1627,7 +1627,7 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 
 // helper condition checking function for ecx value validation in SDM
 bool ecx_defined_in_sdm(u32 *ecx) {
-	return (*ecx > -1 && *ecx < 70 && *ecx != 35 && *ecx != 38 && *ecx != 42);
+	return (*ecx >= 0 && *ecx <= 69 && *ecx != 35 && *ecx != 38 && *ecx != 42);
 }
 // helper condition checking function for ecx value validation in VMX
 bool ecx_enabled_in_vmx(u32 *ecx) {
