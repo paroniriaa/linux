@@ -6293,10 +6293,10 @@ void dump_vmcs(struct kvm_vcpu *vcpu)
 //extern global u32 variable (from cpuid.c) for recording total number of exits
 extern atomic_t total_exits_counter;
 //extern global uint64_t variable (from cpuid.c) for recording total number of cpu cycles on exits
-extern atomic64_t total_cup_cycles_counter;
+extern atomic64_t total_cpu_cycles_counter;
 
 extern atomic_t type_exits_counter[70];
-extern atomic64_t type_cup_cycles_counter[70];
+extern atomic64_t type_cpu_cycles_counter[70];
 
 static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 {
@@ -6470,10 +6470,10 @@ static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 	// increase by 1 for every exit
 	arch_atomic_inc(&total_exits_counter);
 
-	if (exit_reason.basic <= 69) {
-		arch_atomic_inc(&type_exits_counter[exit_reason.basic]);
+	// increase by 1 for current type-specified exit
+	if (exit_reason.basic < 70) {
+		arch_atomic_inc(&type_exits_counter[(int)exit_reason.basic]);
 	}
-
 	// record the beginning of cpu's time stamp counter
 	begin_time_stamp_counter = rdtsc();
 
@@ -6482,11 +6482,14 @@ static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 
 	// record the ending of cpu's time stamp counter
 	end_time_stamp_counter = rdtsc();
-	// compute the current time stamp gap and add it to the total cpu cycle time
-	arch_atomic64_add((end_time_stamp_counter - begin_time_stamp_counter), &total_cup_cycles_counter);
 
-	arch_atomic64_add((end_time_stamp_counter - begin_time_stamp_counter), &type_cup_cycles_counter[(int)exit_handler_index]);
+	// compute the current time stamp gap and add it to the cpu cycle time of total exits
+	arch_atomic64_add((end_time_stamp_counter - begin_time_stamp_counter), &total_cpu_cycles_counter);
 
+	// compute the current time stamp gap and add it to the cpu cycle time of type-specified exit
+	if (exit_reason.basic < 70) {
+		arch_atomic64_add((end_time_stamp_counter - begin_time_stamp_counter), &type_cpu_cycles_counter[(int)exit_reason.basic]);
+	}
 
 	return exit_handler_status;
 
