@@ -6283,19 +6283,32 @@ void dump_vmcs(struct kvm_vcpu *vcpu)
 
  /*
 * Assignment 2 Modification ->
-* Modified function static int vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
+* Modified function static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 * to report back additional information when special CPUID leaf nodes are requested:
 * %eax = 0x4FFFFFFC -> Return the total number of exits (all types) in %eax
-* %eax = 0x4FFFFFFD -> Return the high 32 bits of the total time spent processing all exits in %ebx
-*                    Return the low 32 bits of the total time spent processing all exits in %ecx
+* %eax = 0x4FFFFFFD -> Return the high 32 bits of the total time spent processing exits (all types) in %ebx
+*                    Return the low 32 bits of the total time spent processing exits (all types) in %ecx
+* 
+* Assignment 3 Modification ->
+* Modified function static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
+* to report back additional information when special CPUID leaf nodes are requested:
+* %eax = 0x4FFFFFFE -> Return the total number of exits (type-specified) in %eax
+* %eax = 0x4FFFFFFF -> Return the high 32 bits of the total time spent processing exits (type-specified) in %ebx
+*                    Return the low 32 bits of the total time spent processing all exits (type-specified) in %ecx
 */
 
-//extern global u32 variable (from cpuid.c) for recording total number of exits
+//extern global volatile int32 variable total_exits_counter (from cpuid.c) 
+//for recording total number of exits (all types)
 extern atomic_t total_exits_counter;
-//extern global uint64_t variable (from cpuid.c) for recording total number of cpu cycles on exits
+//extern global volatile int64 variable total_cpu_cycles_counter (from cpuid.c) 
+//for recording total number of cpu cycles on exits (all types)
 extern atomic64_t total_cpu_cycles_counter;
 
+//extern global volatile int32 array variable type_exits_counter (from cpuid.c) 
+//for recording total number of exits (type-specified)
 extern atomic_t type_exits_counter[70];
+//extern global volatile int64 array variable type_cpu_cycles_counter (from cpuid.c) 
+//for recording total number of cpu cycles on exits (type-specified)
 extern atomic64_t type_cpu_cycles_counter[70];
 
 static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
