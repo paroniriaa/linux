@@ -1522,7 +1522,7 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 	u32 eax, ebx, ecx, edx;
 	// u32 variable for recording the type of exit in ECX in case %eax = 0x4FFFFFFF
 	u32 ecx_copy;
-	atomic64_t cycle_counter;
+	u64 cycle_counter;
 
 	if (cpuid_fault_enabled(vcpu) && !kvm_require_cpl(vcpu, 0))
 		return 1;
