@@ -9,6 +9,10 @@
 #include <uapi/asm/kvm_para.h>
 
 extern u32 kvm_cpu_caps[NR_KVM_CPU_CAPS] __read_mostly;
+
+bool ecx_defined_in_sdm(u32 *ecx); 
+bool ecx_enabled_in_vmx(u32 *ecx);
+
 void kvm_set_cpu_caps(void);
 
 void kvm_update_cpuid_runtime(struct kvm_vcpu *vcpu);
