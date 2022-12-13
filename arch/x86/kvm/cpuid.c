@@ -1630,7 +1630,7 @@ bool ecx_defined_in_sdm(u32 *ecx) {
 	int lower_bound = 0;
 	int upper_bound = 69;
 	int sdm_not_defined_exit[] = {35, 38, 42};
-	int length = (int)(sizeof(sdm_not_defined_exit) / sizeof(sdm_not_defined_exit[0]);
+	int length = (int)(sizeof(sdm_not_defined_exit) / sizeof(sdm_not_defined_exit[0]));
 	int i;
 
 	if (*ecx >= lower_bound && *ecx <= upper_bound) {
@@ -1649,7 +1649,7 @@ bool ecx_defined_in_sdm(u32 *ecx) {
 // helper condition checking function for ecx value validation in KVM
 bool ecx_enabled_in_vmx(u32 *ecx) {
 	int vmx_not_enabled_exit[] = {3, 4, 5, 6, 11, 16, 17, 33, 34, 51, 63, 64, 65, 66, 67, 68, 69};
-	int length = (int)(sizeof(vmx_not_enabled_exit) / sizeof(vmx_not_enabled_exit[0]);
+	int length = (int)(sizeof(vmx_not_enabled_exit) / sizeof(vmx_not_enabled_exit[0]));
 	int i;
 
 	for (i = 0; i < length; i++) {
